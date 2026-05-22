@@ -48,10 +48,12 @@ async function checkRenewals() {
     }
   }
 
-  await autoAdvanceRenewals(subs);
+  await autoAdvanceRenewals();
 }
 
-async function autoAdvanceRenewals(subs) {
+async function autoAdvanceRenewals() {
+  const data = await chrome.storage.sync.get(STORAGE_KEY);
+  const subs = data[STORAGE_KEY] || [];
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   let changed = false;
@@ -71,13 +73,26 @@ async function autoAdvanceRenewals(subs) {
 
 function getNextRenewal(dateStr, cycle) {
   const d = new Date(dateStr + 'T00:00:00');
+  const origDay = d.getDate();
   switch (cycle) {
     case 'weekly': d.setDate(d.getDate() + 7); break;
-    case 'monthly': d.setMonth(d.getMonth() + 1); break;
-    case 'quarterly': d.setMonth(d.getMonth() + 3); break;
-    case 'yearly': d.setFullYear(d.getFullYear() + 1); break;
+    case 'monthly':
+      d.setMonth(d.getMonth() + 1);
+      if (d.getDate() !== origDay) d.setDate(0);
+      break;
+    case 'quarterly':
+      d.setMonth(d.getMonth() + 3);
+      if (d.getDate() !== origDay) d.setDate(0);
+      break;
+    case 'yearly':
+      d.setFullYear(d.getFullYear() + 1);
+      if (d.getDate() !== origDay) d.setDate(0);
+      break;
   }
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 async function updateBadge() {

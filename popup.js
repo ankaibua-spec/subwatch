@@ -23,10 +23,19 @@ async function loadSubscriptions() {
 async function saveSubscriptions() {
   if (hasChrome) {
     await chrome.storage.sync.set({ [STORAGE_KEY]: subscriptions });
-    chrome.runtime.sendMessage({ type: 'UPDATE_BADGE' });
+    chrome.runtime.sendMessage({ type: 'UPDATE_BADGE' }).catch(() => {});
   } else {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(subscriptions));
   }
+}
+
+if (hasChrome && chrome.storage.onChanged) {
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes[STORAGE_KEY]) {
+      subscriptions = changes[STORAGE_KEY].newValue || [];
+      render();
+    }
+  });
 }
 
 function bindEvents() {
@@ -35,6 +44,13 @@ function bindEvents() {
   document.getElementById('sub-form').addEventListener('submit', handleSubmit);
   document.getElementById('btn-export').addEventListener('click', exportCSV);
   document.getElementById('btn-sort').addEventListener('click', toggleSort);
+
+  document.getElementById('sub-list').addEventListener('click', (e) => {
+    const editBtn = e.target.closest('.btn-edit');
+    if (editBtn) { e.stopPropagation(); showEditForm(editBtn.dataset.id); return; }
+    const delBtn = e.target.closest('.btn-delete');
+    if (delBtn) { e.stopPropagation(); deleteSub(delBtn.dataset.id); return; }
+  });
 }
 
 function render() {
@@ -84,52 +100,45 @@ function renderList() {
     return;
   }
 
-  const sorted = [...subscriptions].sort((a, b) => {
-    const da = daysUntil(a.nextDate);
-    const db = daysUntil(b.nextDate);
-    return sortAsc ? da - db : db - da;
-  });
+  const withDays = subscriptions.map(s => ({ sub: s, days: daysUntil(s.nextDate) }));
+  withDays.sort((a, b) => sortAsc ? a.days - b.days : b.days - a.days);
 
-  listEl.innerHTML = sorted.map(sub => {
-    const days = daysUntil(sub.nextDate);
+  const fragment = document.createDocumentFragment();
+  for (const { sub, days } of withDays) {
     let statusClass = 'status-ok';
     if (sub.isTrial) statusClass = 'status-trial';
     else if (days <= 3) statusClass = 'status-urgent';
     else if (days <= 7) statusClass = 'status-soon';
 
     const daysText = days < 0 ? 'Overdue' : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
-    const trialBadge = sub.isTrial ? '<span class="trial-badge">TRIAL</span>' : '';
     const costText = sub.cost === 0 ? 'Free' : formatCurrency(sub.cost);
+    const eName = escapeHtml(sub.name);
+    const eId = escapeHtml(sub.id);
+    const eCycle = escapeHtml(sub.cycle);
+    const eCat = escapeHtml(sub.category);
 
-    return `
-      <div class="sub-item" role="listitem" data-id="${sub.id}" data-subscription="${escapeHtml(sub.name)}" data-billing-cycle="${sub.cycle}" data-renewal-status="${statusClass}">
-        <div class="sub-status ${statusClass}" title="Renewal status: ${days <= 3 ? 'urgent' : days <= 7 ? 'upcoming' : 'safe'}"></div>
-        <div class="sub-info">
-          <div class="sub-name" title="Subscription: ${escapeHtml(sub.name)} — ${capitalize(sub.cycle)} recurring payment">${escapeHtml(sub.name)}${trialBadge}</div>
-          <div class="sub-meta">${capitalize(sub.cycle)} · Renews ${daysText} · ${capitalize(sub.category)}</div>
-        </div>
-        <div class="sub-cost" title="${costText} per ${sub.cycle} — recurring charge">${costText}</div>
-        <div class="sub-actions">
-          <button class="btn-edit" data-id="${sub.id}" title="Edit">✏️</button>
-          <button class="btn-delete" data-id="${sub.id}" title="Delete">🗑️</button>
-        </div>
+    const div = document.createElement('div');
+    div.className = 'sub-item';
+    div.setAttribute('role', 'listitem');
+    div.dataset.id = sub.id;
+    div.dataset.subscription = sub.name;
+    div.dataset.billingCycle = sub.cycle;
+    div.dataset.renewalStatus = statusClass;
+    div.innerHTML = `
+      <div class="sub-status ${statusClass}" title="Renewal status: ${days <= 3 ? 'urgent' : days <= 7 ? 'upcoming' : 'safe'}"></div>
+      <div class="sub-info">
+        <div class="sub-name" title="Subscription: ${eName} — ${capitalize(eCycle)} recurring payment">${eName}${sub.isTrial ? '<span class="trial-badge">TRIAL</span>' : ''}</div>
+        <div class="sub-meta">${capitalize(eCycle)} · Renews ${daysText} · ${capitalize(eCat)}</div>
+      </div>
+      <div class="sub-cost" title="${costText} per ${eCycle} — recurring charge">${costText}</div>
+      <div class="sub-actions">
+        <button class="btn-edit" data-id="${eId}" title="Edit">✏️</button>
+        <button class="btn-delete" data-id="${eId}" title="Delete">🗑️</button>
       </div>
     `;
-  }).join('');
-
-  listEl.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showEditForm(btn.dataset.id);
-    });
-  });
-
-  listEl.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteSub(btn.dataset.id);
-    });
-  });
+    fragment.appendChild(div);
+  }
+  listEl.replaceChildren(fragment);
 }
 
 function showAddForm() {
@@ -209,7 +218,7 @@ function exportCSV() {
 
   const header = 'Name,Cost,Cycle,Next Renewal,Category,Free Trial\n';
   const rows = subscriptions.map(s =>
-    `"${s.name}",${s.cost},${s.cycle},${s.nextDate},${s.category},${s.isTrial}`
+    `${csvSafe(s.name)},${s.cost},${csvSafe(s.cycle)},${s.nextDate},${csvSafe(s.category)},${s.isTrial}`
   ).join('\n');
 
   const csv = header + rows;
@@ -220,7 +229,7 @@ function exportCSV() {
   a.href = url;
   a.download = `subwatch-export-${formatDate(new Date())}.csv`;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // --- Utilities ---
@@ -247,7 +256,17 @@ function formatCurrency(n) {
 }
 
 function formatDate(d) {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function csvSafe(s) {
+  if (typeof s !== 'string') s = String(s);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
 }
 
 function generateId() {

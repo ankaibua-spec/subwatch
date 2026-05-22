@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SubWatch — Subscription Tracker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Track subscriptions, get renewal reminders, and manage recurring payment spending. Free trial deadline alerts.",
   "permissions": [
     "storage",
