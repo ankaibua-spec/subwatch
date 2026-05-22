@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SubWatch — Subscription Tracker & Manager</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header with total spending -->
+    <header id="header">
+      <div class="header-top">
+        <h1>SubWatch</h1>
+        <button id="btn-add" title="Add subscription">+</button>
+      </div>
+      <div class="spending-summary">
+        <div class="spending-card">
+          <span class="spending-label">Monthly</span>
+          <span class="spending-amount" id="monthly-total">$0</span>
+        </div>
+        <div class="spending-card">
+          <span class="spending-label">Yearly</span>
+          <span class="spending-amount" id="yearly-total">$0</span>
+        </div>
+        <div class="spending-card">
+          <span class="spending-label">Active</span>
+          <span class="spending-amount" id="sub-count">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Upcoming renewals alert -->
+    <div id="renewal-alert" class="renewal-alert hidden">
+      <span class="alert-icon">⚠️</span>
+      <span id="renewal-alert-text"></span>
+    </div>
+
+    <!-- Subscription list -->
+    <div id="sub-list" class="sub-list">
+      <div id="empty-state" class="empty-state">
+        <p>No subscriptions tracked yet.</p>
+        <p class="hint">Click <strong>+</strong> to add your first subscription.</p>
+      </div>
+    </div>
+
+    <!-- Add/Edit form (hidden by default) -->
+    <div id="form-overlay" class="form-overlay hidden">
+      <div class="form-container">
+        <h2 id="form-title">Add Subscription</h2>
+        <form id="sub-form">
+          <input type="hidden" id="edit-id">
+
+          <label for="sub-name">Name</label>
+          <input type="text" id="sub-name" placeholder="Netflix, Spotify, ChatGPT..." required>
+
+          <label for="sub-cost">Cost ($)</label>
+          <input type="number" id="sub-cost" step="0.01" min="0" placeholder="15.99" required>
+
+          <label for="sub-cycle">Billing Cycle</label>
+          <select id="sub-cycle">
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            <option value="weekly">Weekly</option>
+            <option value="quarterly">Quarterly</option>
+          </select>
+
+          <label for="sub-date">Next Renewal Date</label>
+          <input type="date" id="sub-date" required>
+
+          <label for="sub-category">Category</label>
+          <select id="sub-category">
+            <option value="streaming">Streaming</option>
+            <option value="music">Music</option>
+            <option value="software">Software / SaaS</option>
+            <option value="cloud">Cloud Storage</option>
+            <option value="gaming">Gaming</option>
+            <option value="news">News / Media</option>
+            <option value="fitness">Fitness / Health</option>
+            <option value="education">Education</option>
+            <option value="other">Other</option>
+          </select>
+
+          <label for="sub-remind">Remind Before</label>
+          <select id="sub-remind">
+            <option value="3">3 days</option>
+            <option value="7">7 days</option>
+            <option value="1">1 day</option>
+            <option value="0">Don't remind</option>
+          </select>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="sub-trial">
+            This is a free trial
+          </label>
+
+          <div class="form-actions">
+            <button type="button" id="btn-cancel" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <button id="btn-export" class="footer-btn" title="Export subscriptions">📋 Export</button>
+      <button id="btn-sort" class="footer-btn" title="Sort by renewal date">🔄 Sort</button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
