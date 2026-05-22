@@ -3,62 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SubWatch — Subscription Tracker & Manager</title>
+  <title>SubWatch — Subscription Tracker & Manager | Track Recurring Payments</title>
+  <meta name="description" content="Track subscriptions, manage recurring payments, get renewal reminders. Free subscription spending tracker with free trial deadline alerts. No bank login needed.">
+  <meta name="keywords" content="subscription tracker, subscription manager, recurring payment tracker, bill reminder, spending tracker, free trial reminder, renewal notification, cancel subscription">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div id="app">
-    <!-- Header with total spending -->
-    <header id="header">
+  <div id="app" role="application" aria-label="SubWatch subscription tracker and recurring payment manager">
+    <!-- Subscription spending dashboard header -->
+    <header id="header" aria-label="Subscription spending summary dashboard">
       <div class="header-top">
-        <h1>SubWatch</h1>
-        <button id="btn-add" title="Add subscription">+</button>
+        <h1 title="SubWatch — Track all your subscriptions in one place">SubWatch</h1>
+        <button id="btn-add" title="Add new subscription to track recurring payments" aria-label="Add subscription">+</button>
       </div>
-      <div class="spending-summary">
-        <div class="spending-card">
+      <div class="spending-summary" aria-label="Monthly and yearly subscription cost calculator">
+        <div class="spending-card" data-metric="monthly-subscription-cost">
           <span class="spending-label">Monthly</span>
-          <span class="spending-amount" id="monthly-total">$0</span>
+          <span class="spending-amount" id="monthly-total" title="Total monthly subscription spending">$0</span>
         </div>
-        <div class="spending-card">
+        <div class="spending-card" data-metric="yearly-subscription-cost">
           <span class="spending-label">Yearly</span>
-          <span class="spending-amount" id="yearly-total">$0</span>
+          <span class="spending-amount" id="yearly-total" title="Total yearly subscription spending">$0</span>
         </div>
-        <div class="spending-card">
+        <div class="spending-card" data-metric="active-subscriptions-count">
           <span class="spending-label">Active</span>
-          <span class="spending-amount" id="sub-count">0</span>
+          <span class="spending-amount" id="sub-count" title="Number of active subscriptions tracked">0</span>
         </div>
       </div>
     </header>
 
-    <!-- Upcoming renewals alert -->
-    <div id="renewal-alert" class="renewal-alert hidden">
+    <!-- Subscription renewal reminder alert -->
+    <div id="renewal-alert" class="renewal-alert hidden" role="alert" aria-label="Upcoming subscription renewal reminder">
       <span class="alert-icon">⚠️</span>
       <span id="renewal-alert-text"></span>
     </div>
 
-    <!-- Subscription list -->
-    <div id="sub-list" class="sub-list">
+    <!-- Subscription list — track Netflix, Spotify, ChatGPT, Adobe, SaaS subscriptions -->
+    <div id="sub-list" class="sub-list" role="list" aria-label="Your tracked subscriptions and recurring payments">
       <div id="empty-state" class="empty-state">
         <p>No subscriptions tracked yet.</p>
-        <p class="hint">Click <strong>+</strong> to add your first subscription.</p>
+        <p class="hint">Click <strong>+</strong> to add your first subscription — track Netflix, Spotify, ChatGPT Plus, and more.</p>
       </div>
     </div>
 
-    <!-- Add/Edit form (hidden by default) -->
-    <div id="form-overlay" class="form-overlay hidden">
+    <!-- Add/Edit subscription form — manage recurring payments -->
+    <div id="form-overlay" class="form-overlay hidden" aria-label="Add or edit subscription details">
       <div class="form-container">
         <h2 id="form-title">Add Subscription</h2>
-        <form id="sub-form">
+        <form id="sub-form" aria-label="Subscription tracking form">
           <input type="hidden" id="edit-id">
 
           <label for="sub-name">Name</label>
-          <input type="text" id="sub-name" placeholder="Netflix, Spotify, ChatGPT..." required>
+          <input type="text" id="sub-name" placeholder="Netflix, Spotify, ChatGPT, Adobe, YouTube Premium..." required title="Enter subscription service name">
 
           <label for="sub-cost">Cost ($)</label>
-          <input type="number" id="sub-cost" step="0.01" min="0" placeholder="15.99" required>
+          <input type="number" id="sub-cost" step="0.01" min="0" placeholder="15.99" required title="Recurring payment amount in dollars">
 
           <label for="sub-cycle">Billing Cycle</label>
-          <select id="sub-cycle">
+          <select id="sub-cycle" title="How often this subscription renews">
             <option value="monthly">Monthly</option>
             <option value="yearly">Yearly</option>
             <option value="weekly">Weekly</option>
@@ -66,15 +68,15 @@
           </select>
 
           <label for="sub-date">Next Renewal Date</label>
-          <input type="date" id="sub-date" required>
+          <input type="date" id="sub-date" required title="When this subscription renews next">
 
           <label for="sub-category">Category</label>
-          <select id="sub-category">
-            <option value="streaming">Streaming</option>
-            <option value="music">Music</option>
-            <option value="software">Software / SaaS</option>
-            <option value="cloud">Cloud Storage</option>
-            <option value="gaming">Gaming</option>
+          <select id="sub-category" title="Subscription category for spending breakdown">
+            <option value="streaming">Streaming (Netflix, Disney+, HBO)</option>
+            <option value="music">Music (Spotify, Apple Music, YouTube Music)</option>
+            <option value="software">Software / SaaS (ChatGPT, Figma, Adobe, Notion)</option>
+            <option value="cloud">Cloud Storage (iCloud, Google One, Dropbox)</option>
+            <option value="gaming">Gaming (Xbox, PlayStation, Steam)</option>
             <option value="news">News / Media</option>
             <option value="fitness">Fitness / Health</option>
             <option value="education">Education</option>
@@ -82,15 +84,15 @@
           </select>
 
           <label for="sub-remind">Remind Before</label>
-          <select id="sub-remind">
-            <option value="3">3 days</option>
-            <option value="7">7 days</option>
-            <option value="1">1 day</option>
+          <select id="sub-remind" title="Get renewal reminder notification before charge">
+            <option value="3">3 days before renewal</option>
+            <option value="7">7 days before renewal</option>
+            <option value="1">1 day before renewal</option>
             <option value="0">Don't remind</option>
           </select>
 
           <label class="checkbox-label">
-            <input type="checkbox" id="sub-trial">
+            <input type="checkbox" id="sub-trial" title="Track free trial deadline to avoid unwanted charges">
             This is a free trial
           </label>
 
@@ -102,10 +104,10 @@
       </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
-      <button id="btn-export" class="footer-btn" title="Export subscriptions">📋 Export</button>
-      <button id="btn-sort" class="footer-btn" title="Sort by renewal date">🔄 Sort</button>
+    <!-- Footer — export subscription data and sort by renewal -->
+    <footer aria-label="Subscription management actions">
+      <button id="btn-export" class="footer-btn" title="Export subscription list to CSV for budget tracking">📋 Export</button>
+      <button id="btn-sort" class="footer-btn" title="Sort subscriptions by upcoming renewal date">🔄 Sort</button>
     </footer>
   </div>
 

@@ -102,13 +102,13 @@ function renderList() {
     const costText = sub.cost === 0 ? 'Free' : formatCurrency(sub.cost);
 
     return `
-      <div class="sub-item" data-id="${sub.id}">
-        <div class="sub-status ${statusClass}"></div>
+      <div class="sub-item" role="listitem" data-id="${sub.id}" data-subscription="${escapeHtml(sub.name)}" data-billing-cycle="${sub.cycle}" data-renewal-status="${statusClass}">
+        <div class="sub-status ${statusClass}" title="Renewal status: ${days <= 3 ? 'urgent' : days <= 7 ? 'upcoming' : 'safe'}"></div>
         <div class="sub-info">
-          <div class="sub-name">${escapeHtml(sub.name)}${trialBadge}</div>
+          <div class="sub-name" title="Subscription: ${escapeHtml(sub.name)} — ${capitalize(sub.cycle)} recurring payment">${escapeHtml(sub.name)}${trialBadge}</div>
           <div class="sub-meta">${capitalize(sub.cycle)} · Renews ${daysText} · ${capitalize(sub.category)}</div>
         </div>
-        <div class="sub-cost">${costText}</div>
+        <div class="sub-cost" title="${costText} per ${sub.cycle} — recurring charge">${costText}</div>
         <div class="sub-actions">
           <button class="btn-edit" data-id="${sub.id}" title="Edit">✏️</button>
           <button class="btn-delete" data-id="${sub.id}" title="Delete">🗑️</button>

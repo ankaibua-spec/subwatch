@@ -41,8 +41,8 @@ async function checkRenewals() {
       chrome.notifications.create(`subwatch-${sub.id}`, {
         type: 'basic',
         iconUrl: 'icons/icon128.png',
-        title: `SubWatch — Renewal Reminder`,
-        message: `${sub.name} (${cost}/${sub.cycle}) renews in ${diff} day${diff > 1 ? 's' : ''}.${trialText} Still need it?`,
+        title: `SubWatch — Subscription Renewal Reminder`,
+        message: `${sub.name} (${cost}/${sub.cycle} recurring payment) renews in ${diff} day${diff > 1 ? 's' : ''}.${trialText} Review and cancel if no longer needed.`,
         priority: 2
       });
     }
