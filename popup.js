@@ -9,14 +9,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();
 });
 
+const hasChrome = typeof chrome !== 'undefined' && chrome.storage;
+
 async function loadSubscriptions() {
-  const data = await chrome.storage.sync.get(STORAGE_KEY);
-  subscriptions = data[STORAGE_KEY] || [];
+  if (hasChrome) {
+    const data = await chrome.storage.sync.get(STORAGE_KEY);
+    subscriptions = data[STORAGE_KEY] || [];
+  } else {
+    subscriptions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  }
 }
 
 async function saveSubscriptions() {
-  await chrome.storage.sync.set({ [STORAGE_KEY]: subscriptions });
-  chrome.runtime.sendMessage({ type: 'UPDATE_BADGE' });
+  if (hasChrome) {
+    await chrome.storage.sync.set({ [STORAGE_KEY]: subscriptions });
+    chrome.runtime.sendMessage({ type: 'UPDATE_BADGE' });
+  } else {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(subscriptions));
+  }
 }
 
 function bindEvents() {
@@ -64,16 +74,15 @@ function renderRenewalAlert() {
 
 function renderList() {
   const listEl = document.getElementById('sub-list');
-  const emptyEl = document.getElementById('empty-state');
 
   if (subscriptions.length === 0) {
-    listEl.innerHTML = '';
-    listEl.appendChild(emptyEl);
-    emptyEl.style.display = 'block';
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <p>No subscriptions tracked yet.</p>
+        <p class="hint">Click <strong>+</strong> to add your first subscription.</p>
+      </div>`;
     return;
   }
-
-  emptyEl.style.display = 'none';
 
   const sorted = [...subscriptions].sort((a, b) => {
     const da = daysUntil(a.nextDate);
