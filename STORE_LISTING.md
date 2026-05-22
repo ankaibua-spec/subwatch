@@ -43,10 +43,12 @@ WHO IS SUBWATCH FOR?
 
 The average person has 8+ active subscriptions costing $219/month but thinks they only spend $86. Americans waste $27.7 billion per year on forgotten subscriptions. SubWatch helps you see the real picture and take control of your recurring payments.
 
+SubWatch works as a subscription organizer, money tracker, and expense tracker for all your digital subscriptions. Track monthly bills, get auto-renew alerts, and manage every recurring expense from one simple dashboard.
+
 FREE to use. No account required. No bank connection needed. Just install, add your subscriptions, and start saving money.
 
 ## Privacy Policy URL
 (create a simple one on GitHub Pages)
 
 ## Tags
-subscription, tracker, reminder, budget, payments, manager, recurring, spending
+subscription, tracker, reminder, budget, payments, manager, recurring, spending, organizer, expense, bills, auto-renew, money
